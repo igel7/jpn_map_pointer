@@ -19,7 +19,7 @@ tar cfvz archive.tar.gz ./packages
 2.オフライン端末
 ```c
 tar xfvz archive.tar.gz
-pip install --no-index --find-links=./packages shap
+pip install --no-index --find-links=./packages -r requirements.txt
 ```
 これでインストール完了。
 
