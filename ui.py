@@ -126,9 +126,12 @@ class UI:
         # print("geojson_data in get_center_coordinates:", geojson_data) # デバッグ用
         # print("selected_prefecture:", selected_prefecture) # デバッグ用
         # 都道府県の中心座標を取得する
+        # selected_prefecture = '鳥取県'
         filtered_gdf = geojson_data[geojson_data['N03_001'] == selected_prefecture]
         center_lat = filtered_gdf.geometry.centroid.y.mean()
+        # center_lat = 35.38078428066388 #デバッグ用
         center_lon = filtered_gdf.geometry.centroid.x.mean()
+        # center_lon = 133.73639807083106 #デバッグ用
         return center_lat, center_lon, filtered_gdf
 
     def run(self):
