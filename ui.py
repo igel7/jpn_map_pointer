@@ -1,139 +1,106 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Wed May  1 01:41:21 2024
-
-@author: ryasu
-"""
-
 import tkinter as tk
 from tkinter import ttk
 import webbrowser
-import folium
+import matplotlib.pyplot as plt
+import numpy as np
+from PIL import Image, ImageTk
+import geopandas as gpd
+
 
 class UI:
     def __init__(self, map_creator):
-        self.root = tk.Tk()
-        self.root.title("地図アプリ")
-        # self.data_loader = data_loader
         self.map_creator = map_creator
-        # map_creatorからデータを取得
-        self.geojson_data = map_creator.geojson_data
-        self.geojson_data_ken = map_creator.geojson_data_ken
-        self.railroad_data = map_creator.railroad_data
-        self.highway_data = map_creator.highway_data
-        self.convenience_data = map_creator.convenience_data
-        self.post_office_data = map_creator.post_office_data
-        # UIのウィジェットを作成
-        self.create_widgets()
-        # デバッグ用
-        # print("geojson_data in UI:", self.geojson_data)
-        # print("railroad_data in UI:", self.railroad_data)
-        # print("highway_data in UI:", self.highway_data)
-        # print("convenience_data in UI:", self.convenience_data)
-        # print("post_office_data in UI:", self.post_office_data) 
-        
-    def create_widgets(self):
-        # 地方と都道府県の対応を辞書で定義
-        self.regions_prefectures = {
-            '北海道・東北': ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'],
-            '関東': ['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'],
-            '中部': ['新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県'],
-            '近畿': ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
-            '中国': ['鳥取県', '島根県', '岡山県', '広島県', '山口県'],
-            '四国': ['徳島県', '香川県', '愛媛県', '高知県'],
-            '九州・沖縄': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
-        }
+        self.root = tk.Tk()
+        self.root.title("地図表示アプリ")
 
-        # 地方のプルダウンメニューの作成
-        self.region_var = tk.StringVar()
-        self.region_menu = ttk.Combobox(self.root, textvariable=self.region_var, values=list(self.regions_prefectures.keys()))
-        self.region_menu.set("地方を選択してください")
-        self.region_menu.bind('<<ComboboxSelected>>', self.on_region_select)
-        self.region_menu.pack(pady=10)
+        self.frame_left = tk.Frame(self.root, width=200, height=600)
+        self.frame_left.grid(row=0, column=0, sticky="ns")
+        self.frame_right = tk.Frame(self.root, width=800, height=600)
+        self.frame_right.grid(row=0, column=1, sticky="nsew")
 
-        # 都道府県のプルダウンメニューの作成
-        self.prefecture_var = tk.StringVar()
-        self.prefecture_menu = ttk.Combobox(self.root, textvariable=self.prefecture_var)
-        self.prefecture_menu.set("都道府県を選択してください")
-        self.prefecture_menu.pack(pady=10)
+        # Region Selection
+        self.region_var = tk.StringVar(value='地域を選択')
+        self.region_combobox = ttk.Combobox(self.frame_left, textvariable=self.region_var, values=['地域を選択'] + list(self.map_creator.regions.keys()))
+        self.region_combobox.grid(row=0, column=0, padx=10, pady=10)
+        self.region_combobox.bind("<<ComboboxSelected>>", self.update_prefecture_options)
 
-        # ボタンの作成
-        self.button = tk.Button(self.root, text="地図を表示", command=self.display_map)
-        self.button.pack(pady=10)
+        # Prefecture Selection
+        self.prefecture_var = tk.StringVar(value='都道府県を選択')
+        self.prefecture_combobox = ttk.Combobox(self.frame_left, textvariable=self.prefecture_var, values=['都道府県を選択'])
+        self.prefecture_combobox.grid(row=1, column=0, padx=10, pady=10)
 
-    def on_region_select(self, event):
-        # 地方が選択された際の処理
-        selected_region = self.region_var.get()
-        print("geojson_data in UI:", selected_region) # デバッグ用
-        # 選択された地方に属する都道府県のリストを取得
-        self.prefecture_menu['values'] = self.regions_prefectures[selected_region]
-        self.prefecture_menu.set("都道府県を選択してください")
+        # Show Map Button
+        self.show_map_button = tk.Button(self.frame_left, text="地図を表示", command=self.show_map)
+        self.show_map_button.grid(row=2, column=0, padx=10, pady=10)
 
-    def display_map(self):
-        # 地図を表示する
-        selected_prefecture = self.prefecture_var.get().strip()
-        print("selected_prefecture in UI:", selected_prefecture) # デバッグ用        
-        # print("geojson_data in display_map:", self.geojson_data) # デバッグ用
-        # 中心座標の取得
-        center_lat, center_lon, filtered_gdf = self.get_center_coordinates(self.geojson_data, selected_prefecture)
-        geojson_data_ken = self.geojson_data_ken
+        # # Background Map Selection
+        # self.background_map_var = tk.StringVar()
+        # self.background_map_combobox = ttk.Combobox(self.frame_left, textvariable=self.background_map_var, values=['Map1', 'Map2', 'Map3'])
+        # self.background_map_combobox.grid(row=2, column=0, padx=10, pady=10)  # Use grid instead of pack
 
-        # 地図の作成
-        m = self.map_creator.create_map(selected_prefecture, filtered_gdf, center_lat, center_lon, geojson_data_ken)
-        # 凡例を作成
-        legend_html = """
-        <div style="
-            position: fixed;
-            bottom: 50px;
-            left: 50px;
-            z-index: 9999;
-            background-color: rgba(255, 255, 255, 1.0);
-            border-radius: 8px;
-            padding: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 1.0);
-            font-size: 12px;
-        ">
-            <h4></h4>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 15px; height: 15px; background-color: blue; border-radius: 50%;"></div>
-                <span>コンビニ</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 15px; height: 15px; background-color: red; border-radius: 50%;"></div>
-                <span>郵便局</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 30px; height: 4px; background-color: gray;"></div>
-                <span>高速道路</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 30px; height: 4px; background-color: black;"></div>
-                <span>鉄道</span>
-            </div>
-        </div>
-        """
-    
-        # 地図に凡例を追加
-        m.get_root().html.add_child(folium.Element(legend_html))    
-        # 地図をファイルとして保存
-        map_filename = f"{selected_prefecture}_map.html"
-        m.save(map_filename)
+        # マーカー選択用コンボボックス
+        self.marker_combobox = ttk.Combobox(self.frame_left, values=['コンビニ', '郵便局'])
+        self.marker_combobox.grid(row=3, column=0, padx=10, pady=10)  # Corrected to use grid
 
-        # 地図をブラウザで表示
-        webbrowser.open(map_filename)
+        # データ分析のグラフを表示するキャンバス
+        self.graph_canvas = tk.Canvas(self.root, width=800, height=200)
+        self.graph_canvas.grid(row=1, column=1, sticky="nsew")
 
-    def get_center_coordinates(self, geojson_data, selected_prefecture):
-        # print("geojson_data in get_center_coordinates:", geojson_data) # デバッグ用
-        # print("selected_prefecture:", selected_prefecture) # デバッグ用
-        # 都道府県の中心座標を取得する
-        # selected_prefecture = '鳥取県'
+    def update_prefecture_options(self, event):
+        if self.region_var.get() != '地域を選択':
+            prefectures = self.map_creator.regions.get(self.region_var.get(), [])
+            self.prefecture_combobox['values'] = ['都道府県を選択'] + prefectures
+            self.prefecture_combobox.set('都道府県を選択')
+
+    def get_center_coordinates(self, selected_prefecture):
+        geojson_data = self.map_creator.geojson_data_ken  # Assuming this is a GeoDataFrame
         filtered_gdf = geojson_data[geojson_data['N03_001'] == selected_prefecture]
         center_lat = filtered_gdf.geometry.centroid.y.mean()
-        # center_lat = 35.38078428066388 #デバッグ用
         center_lon = filtered_gdf.geometry.centroid.x.mean()
-        # center_lon = 133.73639807083106 #デバッグ用
         return center_lat, center_lon, filtered_gdf
 
+
+    def show_map(self):
+        selected_prefecture = self.prefecture_var.get()
+        if selected_prefecture != '都道府県を選択':
+            center_lat, center_lon, filtered_gdf = self.get_center_coordinates(selected_prefecture)
+            # Generate map HTML file
+            map_filename = self.map_creator.create_map(selected_prefecture, filtered_gdf, center_lat, center_lon, self.map_creator.geojson_data_ken)
+            # Display map in web browser
+            webbrowser.open_new_tab(map_filename)
+            # Optionally, display the map inside the application using a widget like a web view or an iframe if required
+
+
+
+    def display_graph(self, event):
+        # 選択されたマーカータイプを取得
+        marker_type = self.marker_combobox.get()
+        # ダミーデータの生成（実際には適切なデータソースからデータを取得する必要があります）
+        x = np.linspace(0, 10, 100)
+        y = np.sin(x) + np.random.normal(size=100) * 0.1  # サンプルとして正弦波にノイズを加えたデータを生成
+    
+        # プロットの作成
+        fig, ax = plt.subplots()
+        ax.plot(x, y, label=f'{marker_type}データ')
+        ax.set_xlabel('X 軸')
+        ax.set_ylabel('Y 軸')
+        ax.legend()
+        ax.grid(True)
+    
+        # グラフを一時ファイルに保存し、それをキャンバスに表示
+        plt.savefig('/tmp/marker_data_graph.png')
+        plt.close(fig)
+        img = Image.open('/tmp/marker_data_graph.png')
+        img_tk = ImageTk.PhotoImage(img)
+        self.graph_canvas.create_image(0, 0, image=img_tk, anchor='nw')
+        self.graph_canvas.image = img_tk  # 参照を保持して画像が表示され続けるようにする
+        
     def run(self):
-        # アプリケーションを実行
         self.root.mainloop()
+
+# Assuming map_creator is an instance of MapCreator with regions and prefectures loaded
+if __name__ == "__main__":
+    import map_creator
+    map_creator = map_creator.MapCreator()  # Ensure this is properly initialized with regions
+    app = UI(map_creator)
+    app.run()
