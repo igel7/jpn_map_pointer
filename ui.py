@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
+import tkinterweb
 import webbrowser
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,11 +13,17 @@ class UI:
         self.map_creator = map_creator
         self.root = tk.Tk()
         self.root.title("地図表示アプリ")
+        self.geojson_data = map_creator.geojson_data
+        self.geojson_data_ken = map_creator.geojson_data_ken
 
         self.frame_left = tk.Frame(self.root, width=200, height=600)
         self.frame_left.grid(row=0, column=0, sticky="ns")
         self.frame_right = tk.Frame(self.root, width=800, height=600)
         self.frame_right.grid(row=0, column=1, sticky="nsew")
+        
+        # Initialize web frame to display the map
+        self.web_frame = tkinterweb.HtmlFrame(self.frame_right)
+        self.web_frame.grid(row=0, column=0, sticky="nsew")
 
         # Region Selection
         self.region_var = tk.StringVar(value='地域を選択')
@@ -52,8 +59,11 @@ class UI:
             self.prefecture_combobox['values'] = ['都道府県を選択'] + prefectures
             self.prefecture_combobox.set('都道府県を選択')
 
-    def get_center_coordinates(self, selected_prefecture):
-        geojson_data = self.map_creator.geojson_data_ken  # Assuming this is a GeoDataFrame
+    def get_center_coordinates(self, geojson_data, selected_prefecture):
+        # geojson_data = self.map_creator.geojson_data_ken
+        self.geojson_data.head() #デバッグ用
+        print(selected_prefecture) #デバッグ用
+        # filtered_gdf = geojson_data[geojson_data['N03_001'] == selected_prefecture]
         filtered_gdf = geojson_data[geojson_data['N03_001'] == selected_prefecture]
         center_lat = filtered_gdf.geometry.centroid.y.mean()
         center_lon = filtered_gdf.geometry.centroid.x.mean()
@@ -63,12 +73,15 @@ class UI:
     def show_map(self):
         selected_prefecture = self.prefecture_var.get()
         if selected_prefecture != '都道府県を選択':
-            center_lat, center_lon, filtered_gdf = self.get_center_coordinates(selected_prefecture)
+            center_lat, center_lon, filtered_gdf = self.get_center_coordinates(self.geojson_data, selected_prefecture)
             # Generate map HTML file
-            map_filename = self.map_creator.create_map(selected_prefecture, filtered_gdf, center_lat, center_lon, self.map_creator.geojson_data_ken)
-            # Display map in web browser
-            webbrowser.open_new_tab(map_filename)
-            # Optionally, display the map inside the application using a widget like a web view or an iframe if required
+            m = self.map_creator.create_map(selected_prefecture, filtered_gdf, center_lat, center_lon, self.map_creator.geojson_data_ken)
+            # # 地図をファイルとして保存
+            # map_filename = f"tmp/{selected_prefecture}_map.html"
+            # m.save(map_filename)
+            # print(map_filename)
+            # Display map in tkinter web frame
+            self.web_frame.load_html(m._repr_html_())
 
 
 
