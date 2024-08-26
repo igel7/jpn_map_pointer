@@ -30,10 +30,10 @@ class MapCreator:
 
         # openstreetmap（画像の集積）
         folium.TileLayer(
-            tiles='file:///C:/Users/ryasu/Desktop/WPy64-31050/projects/jpn_map_pointer/data/localmap/png/{z}/{x}/{y}.png',  
+            tiles='file:///C:/Users/ryasu/Documents/GitHub/jpn_map_pointer/data/localmap/png/{z}/{x}/{y}.png',  
             name="普通の地図",
             attr="ry",
-            max_zoom=11, min_zoom=5,
+            max_zoom=15, min_zoom=5,
             overlay=False,
             control=True,
             show=True,
@@ -42,10 +42,10 @@ class MapCreator:
         
         # 白地図（これも画像の集積）
         folium.TileLayer(
-            tiles='file:///C:/Users/ryasu/Desktop/WPy64-31050/projects/jpn_map_pointer/data/localmap/png_wh/{z}/{x}/{y}.png',
+            tiles='file:///C:/Users/ryasu/Documents/GitHub/jpn_map_pointer/data/localmap/png_wh/{z}/{x}/{y}.png',
             name="白地図",
             attr="ry",
-            max_zoom=11, min_zoom=5,
+            max_zoom=15, min_zoom=5,
             overlay=False,
             control=True,
             show=True,
@@ -57,7 +57,7 @@ class MapCreator:
             tiles='',  
             name="背景なし",
             attr="ry",
-            max_zoom=11, min_zoom=5,
+            max_zoom=15, min_zoom=5,
             overlay=False,
             control=True,
             show=True,
