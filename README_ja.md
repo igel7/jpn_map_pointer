@@ -1,0 +1,25 @@
+# 構成
+main.pyが総元締めのコードで、data_loader.py、map_creator.py、ui.pyはそこから呼び出して使っているだけの子供たち。なんとなくコードが長くなったのでファイルを分けているだけ。
+
+あと、使っているデータ類はdataフォルダに全部入れた。ウェブスクレイピングで集めた情報もあるが、すべて公開情報のみ使用。
+
+
+# 必要なパッケージ
+requirements.txt　にすべて記載した。
+オフライン端末のWinPython環境でインストールするには、WinPythonのフォルダにあるWinPython Terminal.exeを立ち上げて、以下の感じでインストール作業をすればよいと思われる。
+
+1.オンライン端末
+```c
+pip download --d ./packages -r requirements.txt
+tar cfvz archive.tar.gz ./packages
+```
+これでたぶん、packagesフォルダに必要なパッケージが一括ダウンロードされるので、USBとかでオフライン端末に持っていき、
+
+
+2.オフライン端末
+```c
+tar xfvz archive.tar.gz
+pip install --no-index --find-links=./packages -r requirements.txt
+```
+これでインストール完了。
+
