@@ -1,37 +1,36 @@
-# このリポジトリについて
-- オフライン端末で日本地図を表示し、そこにコンビニなどの施設の位置を表示することができるアプリ。
-- オンライン環境だとgoogleマップやGISアプリケーションなど、多数の選択肢があるが、オフライン環境でインタラクティブな地図アプリとなると、なかなかないため、作成した。
-- 自分で好きな地図レイヤーや、住所情報をマッピングできるのが最大の売り。
+[日本語はこちら](README_ja.md)
 
-# 技術的な工夫点
-- 有名なfoliumパッケージを使っているが、同パッケージはオンライン環境を前提としているため、java scriptファイルやcssファイルなど、オンラインにあるファイルを探しに行く仕様。
-- このため、foliumパッケージを直接編集し、ローカルにダウンロードしてきたjava scriptファイルやcssファイルを参照するように変更してある。
+# About This Repository
+- An app that displays a map of Japan on offline devices and can show the locations of facilities such as convenience stores.
+- While there are many options like Google Maps and GIS applications available online, interactive map apps for offline use are rare, which prompted the creation of this app.
+- The main feature is the ability to map custom map layers and address information.
 
-# pythonコードのファイル構成
-- main.pyが総元締めのコードで、data_loader.py、map_creator.py、ui.pyはそこから呼び出して使用。
-- あと、使っているデータ類はdataフォルダに全部入れた。一部の情報（コンビニ住所）はウェブスクレイピングによりインターネット上から収集したもの。
-- 自分で何か他にマッピングしたい情報や重ねたいレイヤーがあれば、dataフォルダに格納し、コードを一部改変することで対応可能。
+# Technical Innovations
+- Utilizes the well-known folium package, which is designed for online environments and therefore typically seeks online files such as JavaScript and CSS files.
+- For this reason, the folium package has been directly edited to refer to JavaScript and CSS files downloaded locally.
 
+# Python Code File Structure
+- `main.py` is the main controlling code, calling and utilizing `data_loader.py`, `map_creator.py`, and `ui.py`.
+- All used data types are stored in the `data` folder. Some information (convenience store addresses) was collected from the internet via web scraping.
+- If you want to map other information or add additional layers, you can store them in the `data` folder and adjust the code accordingly.
 
-# 必要なパッケージ
-- requirements.txt　にすべて記載した。
+# Required Packages
+- All are listed in `requirements.txt`.
 
-# 補足的な説明
+# Supplementary Explanation
 
-## オフライン端末におけるパッケージインストール作業
-- もしオフライン端末で使用しているPythonが、WinPython環境の場合、WinPython Terminal.exeを立ち上げて、以下の流れでパッケージのインストール作業をすればよい。
+## Installing Packages on Offline Devices
+- If Python is being used on an offline device within a WinPython environment, launch WinPython Terminal.exe and follow these steps:
 
-### 1.オンライン端末での作業
+### 1. Work on an Online Device
 ```c
 pip download --d ./packages -r requirements.txt
 tar cfvz archive.tar.gz ./packages
 ```
-- これで、packagesフォルダに必要なパッケージが一括ダウンロードされるので、USBメモリなどでオフライン端末に持っていき、次の作業に移る。
+- This downloads all necessary packages into the packages folder, which you can then transfer to an offline device via USB drive, and proceed to the next step.
 
-### 2.オフライン端末（本アプリを使う端末）での作業
 ```c
 tar xfvz archive.tar.gz
 pip install --no-index --find-links=./packages -r requirements.txt
 ```
-- これでインストール完了。
-
+- This completes the installation.
