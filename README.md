@@ -29,6 +29,7 @@ tar cfvz archive.tar.gz ./packages
 ```
 - This downloads all necessary packages into the packages folder, which you can then transfer to an offline device via USB drive, and proceed to the next step.
 
+### 2. Work on an Offline Device (with which you will use this app)
 ```c
 tar xfvz archive.tar.gz
 pip install --no-index --find-links=./packages -r requirements.txt
