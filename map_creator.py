@@ -21,41 +21,41 @@ class MapCreator:
         self.post_office_data = post_office_data
     
     def create_map(self, selected_prefecture, filtered_gdf, center_lat, center_lon, geojson_data_ken):
-        # とりあえず空の地図を作る（この上にレイヤーを載せていく）
-        m = folium.Map(tiles='', # タイルなし
+        # make void layer（on which we make other layers）
+        m = folium.Map(tiles='', # No Tiles
                        location=[center_lat, center_lon],
                        zoom_start=9, max_zoom=11, min_zoom=5,
                        attr='blank',
                        no_wrap=True)
 
-        # openstreetmap（画像の集積）
+        # openstreetmap (piles of pictures)
         folium.TileLayer(
             tiles='file:///C:/Users/ryasu/Documents/GitHub/jpn_map_pointer/data/localmap/png/{z}/{x}/{y}.png',  
-            name="普通の地図",
+            name="Ordinary Map",
             attr="ry",
             max_zoom=15, min_zoom=5,
             overlay=False,
             control=True,
             show=True,
-            styles={'background-color': 'white'}  # 背景色を白色に設定
+            styles={'background-color': 'white'}  # set background colour : white
         ).add_to(m)
         
-        # 白地図（これも画像の集積）
+        # white map（anothe pile of pics）
         folium.TileLayer(
             tiles='file:///C:/Users/ryasu/Documents/GitHub/jpn_map_pointer/data/localmap/png_wh/{z}/{x}/{y}.png',
-            name="白地図",
+            name="White Map",
             attr="ry",
             max_zoom=15, min_zoom=5,
             overlay=False,
             control=True,
             show=True,
-            styles={'background-color': 'white'}  # 背景色を白色に設定
+            styles={'background-color': 'white'}  
         ).add_to(m)
             
-        # スクショ撮るときとかに使うことを想定して背景なしのレイヤーも入れておく
+        # No layer for screen shot
         folium.TileLayer(
             tiles='',  
-            name="背景なし",
+            name="No Background Map",
             attr="ry",
             max_zoom=15, min_zoom=5,
             overlay=False,
@@ -65,35 +65,35 @@ class MapCreator:
         ).add_to(m)
         
         
-        # 人口密度レイヤーの作成
+        # population density layer
         self.create_population_density_layer(m, filtered_gdf, selected_prefecture)
         
-        # 都道府県レイヤーの作成
+        # prefectures layer
         self.add_prefecture_boundary_layer(m, geojson_data_ken, selected_prefecture)
         
-        # 市区町村レイヤーの作成
+        # details inside pref layer
         self.add_municipal_boundaries_layer(m, filtered_gdf)
         
-        # 道路データの追加
+        # add highway map
         self.add_railroad_and_highway(m, filtered_gdf)
         
-        # コンビニと郵便局のマーカー追加
+        # Add convenience stores and post offices
         self.add_convenience_and_post_office(m, selected_prefecture)
         
-        # レイヤーコントロールを追加
+        # Add layer controller
         folium.LayerControl().add_to(m)
         
         return m
     
     def create_population_density_layer(self, m, filtered_gdf, selected_prefecture):
-        # ポリゴン境界データのレイヤーを作成
+        # ポリゴン境界データ
         polygon_layer = folium.FeatureGroup(name="市区町村の人口密度")
         
-        # 人口密度の最小値と最大値を計算
+        # calculate Max and Min number of population density
         min_density = filtered_gdf['density'].min()
         max_density = filtered_gdf['density'].max()
         
-        # カラーマップを作成
+        # Make color map
         cmap = cm.LinearColormap(
             ['white', 'blue'],
             vmin=min_density,
@@ -116,7 +116,7 @@ class MapCreator:
                     'fill_opacity': 0.4
                 }
         
-        # GeoJSONデータを地図に追加
+        # add GeoJSON data to the map
         geojson_object = folium.GeoJson(filtered_gdf, style_function=style_function)
         geojson_object.add_to(polygon_layer)
         
