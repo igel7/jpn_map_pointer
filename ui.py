@@ -33,7 +33,7 @@ class UI:
         # print("post_office_data in UI:", self.post_office_data) 
         
     def create_widgets(self):
-        # 地方と都道府県の対応を辞書で定義
+        # make dictionary data of prefectures
         self.regions_prefectures = {
             '北海道・東北': ['北海道', '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'],
             '関東': ['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'],
@@ -44,43 +44,43 @@ class UI:
             '九州・沖縄': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県']
         }
 
-        # 地方のプルダウンメニューの作成
+        # make pulldown menu of regions
         self.region_var = tk.StringVar()
         self.region_menu = ttk.Combobox(self.root, textvariable=self.region_var, values=list(self.regions_prefectures.keys()))
         self.region_menu.set("地方を選択してください")
         self.region_menu.bind('<<ComboboxSelected>>', self.on_region_select)
         self.region_menu.pack(pady=10)
 
-        # 都道府県のプルダウンメニューの作成
+        # make pulldown menu of prefectures
         self.prefecture_var = tk.StringVar()
         self.prefecture_menu = ttk.Combobox(self.root, textvariable=self.prefecture_var)
         self.prefecture_menu.set("都道府県を選択してください")
         self.prefecture_menu.pack(pady=10)
 
-        # ボタンの作成
+        # Make button
         self.button = tk.Button(self.root, text="地図を表示", command=self.display_map)
         self.button.pack(pady=10)
 
     def on_region_select(self, event):
-        # 地方が選択された際の処理
+        # when a region is selected...
         selected_region = self.region_var.get()
         print("geojson_data in UI:", selected_region) # デバッグ用
-        # 選択された地方に属する都道府県のリストを取得
+        # get list of prefs of the region
         self.prefecture_menu['values'] = self.regions_prefectures[selected_region]
         self.prefecture_menu.set("都道府県を選択してください")
 
     def display_map(self):
-        # 地図を表示する
+        # Show map
         selected_prefecture = self.prefecture_var.get().strip()
         print("selected_prefecture in UI:", selected_prefecture) # デバッグ用        
         # print("geojson_data in display_map:", self.geojson_data) # デバッグ用
-        # 中心座標の取得
+        # get center coordinates
         center_lat, center_lon, filtered_gdf = self.get_center_coordinates(self.geojson_data, selected_prefecture)
         geojson_data_ken = self.geojson_data_ken
 
-        # 地図の作成
+        # make map
         m = self.map_creator.create_map(selected_prefecture, filtered_gdf, center_lat, center_lon, geojson_data_ken)
-        # 凡例を作成
+        # make legend
         legend_html = """
         <div style="
             position: fixed;
@@ -115,25 +115,25 @@ class UI:
     
         # 地図に凡例を追加
         m.get_root().html.add_child(folium.Element(legend_html))    
-        # 地図をファイルとして保存
+        # Save map as html file for easy access
         map_filename = f"{selected_prefecture}_map.html"
         m.save(map_filename)
 
-        # 地図をブラウザで表示
+        # browse the map by web browser
         webbrowser.open(map_filename)
 
     def get_center_coordinates(self, geojson_data, selected_prefecture):
-        # print("geojson_data in get_center_coordinates:", geojson_data) # デバッグ用
-        # print("selected_prefecture:", selected_prefecture) # デバッグ用
-        # 都道府県の中心座標を取得する
+        # print("geojson_data in get_center_coordinates:", geojson_data) # debug
+        # print("selected_prefecture:" selected_prefecture) # debug
+        # get center coordinate of the pref
         # selected_prefecture = '鳥取県'
         filtered_gdf = geojson_data[geojson_data['N03_001'] == selected_prefecture]
         center_lat = filtered_gdf.geometry.centroid.y.mean()
-        # center_lat = 35.38078428066388 #デバッグ用
+        # center_lat = 35.38078428066388 # debug
         center_lon = filtered_gdf.geometry.centroid.x.mean()
-        # center_lon = 133.73639807083106 #デバッグ用
+        # center_lon = 133.73639807083106 # debug
         return center_lat, center_lon, filtered_gdf
 
     def run(self):
-        # アプリケーションを実行
+        # run app
         self.root.mainloop()
