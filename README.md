@@ -1,7 +1,7 @@
 [日本語はこちら](README_ja.md)
 
 # About This Repository
-- An app that displays a map of Japan on offline devices and can show the locations of facilities such as convenience stores.
+- An app that displays a map of Japan on offline devices and can show the locations of facilities such as convenience stores, banks, railways, streets, and so forth.
 - While there are many options like Google Maps and GIS applications available online, interactive map apps for offline use are rare, which prompted the creation of this app.
 - The main feature is the ability to map custom map layers and address information.
 
